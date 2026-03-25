@@ -2,8 +2,32 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pharmacotherapy Final Test</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="약치 퀴즈">
+<meta name="theme-color" content="#0d6efd">
+
+<link rel="manifest" id="manifest">
+<script>
+    const manifest = {
+        "name": "약물치료학 퀴즈",
+        "short_name": "약치 퀴즈",
+        "display": "standalone",
+        "start_url": ".",
+        "background_color": "#f8f9fa",
+        "theme_color": "#0d6efd",
+        "icons": [{
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230d6efd'/%3E%3Ctext x='50' y='65' font-size='50' fill='white' text-anchor='middle'%3E💊%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        }]
+    };
+    document.getElementById('manifest').href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+</script>
+
 <style>
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -13,16 +37,20 @@
         display: flex;
         height: 100vh;
         overflow: hidden;
+        /* 앱처럼 보이도록 텍스트 선택 방지 (입력창 제외) */
+        user-select: none; 
+        -webkit-user-select: none;
     }
 
     /* 좌측 사이드바 */
     .sidebar {
-        width: 250px;
+        width: 280px;
         background-color: #f1f3f5;
         border-right: 1px solid #dee2e6;
         display: flex;
         flex-direction: column;
         height: 100%;
+        flex-shrink: 0;
     }
     .sidebar-header {
         padding: 15px;
@@ -31,6 +59,25 @@
         color: #0d6efd;
         border-bottom: 1px solid #dee2e6;
     }
+    .header-buttons {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+    .action-btn {
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #495057;
+        flex-grow: 1;
+        text-align: center;
+    }
+    .action-btn:hover { background: #e9ecef; }
+    
     .nav-grid-container {
         padding: 15px;
         overflow-y: auto;
@@ -98,6 +145,9 @@
     #quiz-container {
         padding: 30px;
         max-width: 900px;
+        /* 본문 텍스트는 선택 가능하도록 복구 */
+        user-select: text; 
+        -webkit-user-select: text;
     }
     .question-layout {
         display: flex;
@@ -132,9 +182,10 @@
     
     .question-box {
         flex-grow: 1;
-        background-color: #f1f8ff; /* 연한 파란색 배경 */
+        background-color: #f1f8ff;
         border: 1px solid #bce8f1;
         padding: 20px;
+        border-radius: 4px;
     }
     .guideline-text {
         font-weight: bold;
@@ -156,6 +207,25 @@
         margin-right: 10px;
         cursor: pointer;
     }
+    
+    .essay-input {
+        width: 100%;
+        height: 120px;
+        padding: 15px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 15px;
+        resize: vertical;
+        box-sizing: border-box;
+        font-family: inherit;
+        line-height: 1.5;
+    }
+    .essay-input:focus {
+        outline: none;
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
     .clear-choice {
         display: inline-block;
         margin-top: 15px;
@@ -185,12 +255,20 @@
         border-color: #0d6efd;
     }
     .btn-primary:hover { background-color: #0b5ed7; }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    .btn-danger:hover { background-color: #bb2d3b; }
 
     /* 결과 화면 UI */
     #results-container {
         padding: 30px;
         max-width: 900px;
         display: none;
+        user-select: text; 
+        -webkit-user-select: text;
     }
     .result-item {
         background-color: #fff;
@@ -209,60 +287,61 @@
     .status-correct { color: #198754; }
     .status-incorrect { color: #dc3545; }
 
-    /* --- 여기서부터 모바일 반응형 UI 코드 --- */
+    /* 모바일 반응형 디자인 */
     @media (max-width: 768px) {
         body {
-            flex-direction: column; /* 화면을 좌우가 아닌 위아래로 배치 */
-            overflow: auto; /* 모바일에서는 전체 스크롤 허용 */
+            flex-direction: column;
+            overflow: auto;
             height: auto;
         }
         .sidebar {
-            width: 100%; /* 사이드바를 가로 꽉 차게 */
+            width: 100%;
             height: auto;
-            order: 2; /* 사이드바(문항 네비게이션)를 화면 맨 아래로 이동 */
+            order: 2;
             border-right: none;
             border-top: 2px solid #dee2e6;
         }
         .main-content {
-            order: 1; /* 문제 영역을 화면 맨 위로 배치 */
+            order: 1;
             overflow-y: visible;
         }
-        #quiz-container {
-            padding: 15px; /* 모바일에서는 양옆 여백 축소 */
+        #quiz-container, #results-container {
+            padding: 15px;
+            /* iOS 사파리 하단 바 가림 방지 여백 */
+            padding-bottom: 100px; 
         }
         .question-layout {
-            flex-direction: column; /* 정보 박스와 문제 박스를 좌우가 아닌 위아래로 스택 */
+            flex-direction: column;
             gap: 10px;
         }
         .info-box {
-            width: auto; /* 너비 제한 해제 */
-            display: flex; /* 요소들을 가로로 나열 */
+            width: auto;
+            display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 15px;
             padding: 10px 15px;
         }
-        .info-box h3 {
-            margin: 0;
-        }
-        #q-status-display {
-            margin-bottom: 0 !important;
-        }
-        .flag-btn {
-            margin-top: 0;
-        }
+        .info-box h3 { margin: 0; }
+        #q-status-display { margin-bottom: 0 !important; }
+        .flag-btn { margin-top: 0; }
         .breadcrumb {
             padding: 10px 15px;
             font-size: 12px;
         }
     }
-
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-header">Quiz navigation</div>
+    <div class="sidebar-header">
+        <div>Quiz navigation</div>
+        <div class="header-buttons">
+            <button class="action-btn" onclick="shuffleQuiz()">🔀 문제 섞기</button>
+            <button class="action-btn" id="mode-toggle-btn" onclick="toggleMode()">📝 서술형 모드 켜기</button>
+        </div>
+    </div>
     <div class="nav-grid-container">
         <div class="nav-grid" id="nav-grid">
             </div>
@@ -274,7 +353,7 @@
 
 <div class="main-content">
     <div class="breadcrumb">
-        🏠 / 약물치료학2 / 2024년 약물치료학2 CV퀴즈
+        🏠 / 약물치료학2 / 2024년 약물치료학2 CV퀴즈 <span id="mode-indicator" style="font-weight:bold; color:#0d6efd; margin-left:10px;">[객관식 모드]</span>
     </div>
     
     <div id="quiz-container">
@@ -290,7 +369,7 @@
                 <div class="question-text" id="q-text-display">Question text goes here</div>
                 <div id="options-container">
                     </div>
-                <div class="clear-choice" onclick="clearChoice()">Clear my choice</div>
+                <div class="clear-choice" onclick="clearChoice()">Clear my choice / 입력 지우기</div>
             </div>
         </div>
         <div class="nav-buttons">
@@ -301,59 +380,58 @@
 
     <div id="results-container">
         <h2>퀴즈 결과</h2>
+        <div style="margin-bottom: 10px;">
+            <span id="score-display" style="font-size: 18px; font-weight: bold;"></span>
+        </div>
+        <div id="essay-warning" style="display: none; color: #dc3545; font-size: 14px; margin-bottom: 20px; font-weight: bold;">
+            * 서술형 모드에서는 띄어쓰기나 대소문자 차이로 오답 처리될 수 있습니다. 반드시 '정답(모범 답안)'과 눈으로 직접 비교해 보세요!
+        </div>
         <div id="results-list"></div>
-        <button class="btn btn-primary" style="margin-top: 20px;" onclick="location.reload()">다시 풀기</button>
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="location.reload()">모든 문제 처음부터 다시 풀기</button>
+            <button class="btn btn-danger" id="retry-incorrect-btn" onclick="retryIncorrect()">❌ 틀린 문제만 다시 풀기</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // 사진을 바탕으로 정답이 완벽하게 맞춰진 40문제 데이터
-    const quizData = [
+    // 원본 40문제 데이터
+    const originalQuizData = [
         { guideline: "[2022년 고혈압 진료지침]", text: "1. 노인 환자의 수축기혈압은 mmHg 미만으로 조절할 것을 권고한다.", options: ["120", "130", "140", "150"], answer: 2 },
         { guideline: "[2022년 고혈압 진료지침]", text: "2. 심혈관질환이 있는 고혈압환자에서 이차 예방을 위해 아스피린을 투여를 권고한다.", options: ["True", "False"], answer: 0 },
         { guideline: "[2022년 고혈압 진료지침]", text: "3. 미세단백뇨나 단백뇨를 동반한 당뇨병 환자의 고혈압 치료약제로 ( )를 권고한다.", options: ["ACE 억제제", "베타차단제", "칼슘차단제", "티아지드계 이뇨제"], answer: 0 },
         { guideline: "[2022년 고혈압 진료지침]", text: "4. 정맥 내 혈전용해 치료가 적합한 급성기 허혈성 뇌졸중 환자에서 혈압이 높은 경우 정맥 내 혈전용해 치료 시작 전에 혈압을 140/90 mmHg 이하로 낮출 것을 권고한다.", options: ["True", "False"], answer: 1 },
         { guideline: "[2022년 고혈압 진료지침]", text: "5. 임신 중 사용할 수 있는 항고혈압약제가 아닌 것은?", options: ["Captopril", "Hydralazine", "Labetalol", "Methyldopa"], answer: 0 },
-        
         { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "6. Adults with SIHD and hypertension should be treated with medications ( ) for compelling indications as first-line therapy.", options: ["GDMT calcium channel blockers, thiazide diuretics", "GDMT ACE inhibitors, ARBS", "GDMT beta blockers, thiazide diuretics", "GDMT beta blockers, ACE inhibitors"], answer: 3 },
         { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "7. ( ) is NOT recommended in the treatment of hypertension in adults with HFrEF.", options: ["Nifedipine", "Amlodipine", "Clevidipine", "Verapamil"], answer: 3 },
         { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "8. In adults with HFpEF who present with symptoms of volume overload, ( ) should be prescribed to control hypertension.", options: ["Diuretics", "Beta blockers", "Calcium channel blockers", "ACE inhibitors"], answer: 0 },
         { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "9. In adults with hypertension and CKD, treatment with ( ) is reasonable to slow kidney disease progression.", options: ["ACE inhibitor", "Calcium channel blocker", "Diuretic", "Beta blocker"], answer: 0 },
         { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "10. For adults who experience a stroke or TIA, treatment with ( ) is useful", options: ["Thiazide diuretic, ACE inhibitor, or ARB", "Loop diuretic, ACE inhibitor, or ARB", "Calcium channel blocker, ACE inhibitor, or ARB", "Beta blocker, ACE inhibitor, or ARB"], answer: 0 },
-        
         { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "11. ( ) remain first line therapy for lipid lowering inpatients with CCD.", options: ["Ezetimibe", "Statin", "Fenofibrate", "Alirocumab"], answer: 1 },
         { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "12. In patients with CCD treated with PCI, dual antiplatelet therapy (DAPT) consisting of ( ) for 6 months post PCI followed by single antiplatelet therapy (SAPT) is indicated to reduce MACE and bleeding events.", options: ["aspirin and dipyridamole", "clopidogrel and prasugrel", "clopidogrel and ticagrelor", "aspirin and clopidogrel"], answer: 3 },
         { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "13. In patients with CCD, an annual influenza vaccination is NOT recommended.", options: ["True", "False"], answer: 1 },
         { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "14. In patients with CCD and angina, antianginal therapy with either a beta blocker, CCB, or long-acting nitrate is recommended for immediate short-term relief of angina or equivalent symptoms.", options: ["True", "False"], answer: 1 },
         { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "15. In patients with CCD, ( ) is recommended in patients who remain symptomatic despite treatment with beta blockers, CCB, or long-acting nitrate therapies.", options: ["Ivabradine", "Metoprolol", "Ranolazine", "Amlodipine"], answer: 2 },
-
         { guideline: "[2022 이상지질혈증 치료지침]", text: "16. 스타틴 투약 전( )를 시행하고 투약 후( ) 수치가 3배 이상 상승되었을 때 투약 중단을 권고한다.", options: ["인지기능검사, MMSE", "갑상샘기능검사, 갑상샘호르몬", "심장기능검사, 트로포닌", "간기능검사, 간효소"], answer: 3 },
         { guideline: "[2022 이상지질혈증 치료지침]", text: "17. LDL 콜레스테롤 목표에 도달하기 위하여 스타틴과 니코틴산의 병용투여를 추천한다.", options: ["True", "False"], answer: 1 },
         { guideline: "[2022 이상지질혈증 치료지침]", text: "18. 최대 가용 용량의 스타틴을 투여해도 LDL 콜레스테롤이 목표 수치 미만으로 감소하지 않으면 ( )를 병용한다.", options: ["담즙산 결합수지", "에제티미브", "피브린산 유도체", "오메가-3 지방산"], answer: 1 },
         { guideline: "[2022 이상지질혈증 치료지침]", text: "19. ( )이 있는 경우에는 기저 LDL 콜레스테롤 농도와 상관없이 바로 스타틴을 투약한다.", options: ["대동맥질환", "만성콩팥병", "심방세동", "급성심근경색"], answer: 3 },
         { guideline: "[2022 이상지질혈증 치료지침]", text: "20. 중성지방이 지속적으로 500 mg/dL 이상인 경우, 중성지방 조절을 위한 약제로( )를 고려한다.", options: ["스타틴+에제티미브", "피브린산 유도체", "오메가-3 지방산", "1,2", "2,3", "1,3", "1,2,3"], answer: 4 },
-
         { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "21. In patients with severe primary hypercholesterolemia (LDL-C level >190 mg/dL), without calculating 10-year ASCVD risk, begin ( ) therapy.", options: ["high intensity statin", "moderate-intensity statin", "statin with ezetimibe", "statin with PCSK9 inhibitor"], answer: 0 },
         { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "22. In patients 40 to 75 years of age with DM and LDL-C > 70 mg/dL, start( ) therapy without calculating 10-year ASCVD risk.", options: ["high intensity statin", "moderate-intensity statin", "statin with ezetimibe", "statin with PCSK9 inhibitor"], answer: 1 },
         { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "23. Select a 'Major ASCVD Event'.", options: ["Heterozygous familial hypercholesterolemia", "Diabetes mellitus", "History of congestive HF", "History of ischemic stroke"], answer: 3 },
-        
-        // 정답 수정됨: 24번 인덱스 0번(1. high-sensitivity C-reactive protein)으로 반영
         { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "24. Which one is a risk-enhancing factor?", options: ["high-sensitivity C-reactive protein ≥ 2.0 mg/L", "ankle-brachial index <1.9", "lipoprotein (a) ≥ 150 mg/dL", "persistent elevations of triglycerides ≥ 150 mg/dL"], answer: 0 },
-        
         { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "25. Assess adherence and percentage response to LDL-C-lowering medications and lifestyle changes with repeat lipid measurement ( ) after statin initiation or dose adjustment.", options: ["1 to 2 weeks", "2 to 4 weeks", "4 to 12 weeks", "12 to 18 weeks"], answer: 2 },
-
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "26. 박출률 감소 심부전 환자에서 심혈관계 사망률과 심부전으로 인한 재입원을 감소시키므로, 표준치료로 사용해야 하는 약물계열은?", options: ["안지오텐신수용체-네프릴리신억제제(ARNI)", "베타차단제", "알도스테론 길항제", "1,2", "2,3", "1,3", "1,2,3"], answer: 6 },
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "27. 대규모 임상 연구를 통해 심부전 치료 효과가 검증된 베타차단제는?", options: ["비소프롤롤, 카르베디롤, 라베탈롤", "비소프롤롤, 카르베디롤, 메토프로롤 서방정", "프로프라놀롤, 비소프롤롤, 메토프로롤 서방정", "아테놀롤, 메토프로롤, 카르베디롤"], answer: 1 },
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "28. 당뇨병 동반유무와 관계없이 심부전으로 인한 입원 또는 심혈관계 사망을 감소시키기 위해 투여를 권고하는 나트륨-포도당 공동수송체2(SGLT2) 억제제는?", options: ["saxagliptin 또는 empagliflozin", "canagliflozin 또는 tirzepatide", "dapagliflozin 또는 semaglutide", "empagliflozin 또는 dapagliflozin"], answer: 3 },
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "29. 체액저류의 소견이 있는 심부전 환자에서 좌심실 수축기능 부전의 동반 여부와 관계없이 적정 체액량을 유지하기 위해 ( )를 사용해야 한다.", options: ["이뇨제", "베타차단제", "알도스테론 길항제", "SGLT2 억제제"], answer: 0 },
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "30. 좌심실 박출률이 35% 이하이고, 안정시 맥박수가 분당 70회 이상인 동율동의 심부전 환자에서, 베타차단제, ACE(또는 ARNI), 알도스테론 길항제)를 사용함에도 불구하고 심부전 증상이 지속될 경우 심부전으로 인한 입원 및 심혈관계 사망 위험을 줄이기 위해 사용할 수 있는 약물은?", options: ["verapamil", "ivabradine", "ranolazine", "amiodarone"], answer: 1 },
         { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "31. 심방세동이 동반된 박출률 감소 심부전 환자에서 베타차단제를 사용해도 맥박조절이 잘 되지 않거나, 베타차단제 사용이 금기인 경우, 맥박 조절을 위해 디곡신 사용이 도움이 될 수 있다.", options: ["False", "True"], answer: 1 },
-
         { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "32. The clinical strategy of inhibition of the renin-angiotensin system with ACE inhibitors OR ARBS OR ARNI in conjunction with evidence-based beta blockers, and ( ) in selected patients, is recommended for patients with chronic HFrEF to reduce morbidity and mortality.", options: ["alpha blockers", "loop diuretics", "calcium channel blockers", "aldosterone antagonists"], answer: 3 },
         { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "33. In patients with type 2 diabetes and either established CVD or at high cardiovascular risk, ( ) should be used to prevent hospitalizations for HF.", options: ["ARNI", "beta blockers", "SGLT2i", "dihydropyridine calcium channel-blockers", "ACEI"], answer: 2 },
         { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "34. In patients with HF who have fluid retention, ( ) are recommended to relieve congestion, improve symptoms, and prevent worsening HF.", options: ["ACEi", "diuretics", "SGLT2i", "beta blockers"], answer: 1 },
         { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "35. Which medications that may cause or exacerbate HF?", options: ["NSAIDS", "Saxagliptin", "Thiazolidinediones", "1,2", "2,3", "1,3", "1,2,3"], answer: 6 },
-
         { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "36. Which medication is NOT recommended for selecting anticoagulant in patients with AF and an elevated CHA2DS2-VASc score of 2 or greater in men or 3 or greater in women?", options: ["Dabigatran", "Rivaroxaban", "Aspirin", "Apixaban"], answer: 2 },
         { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "37. Among patients treated with warfarin, ( ) should be determined at least weekly during initiation of anticoagulant therapy and at least monthly when anticoagulation is stable.", options: ["Anti-factor Xa", "INR", "aPTT", "PT"], answer: 1 },
         { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "38. ( ) and hepatic function should be evaluated before initiation of a DOAC and should be reevaluated at least annually.", options: ["Cognitive function", "Pulmonary function", "Renal function", "Gl function"], answer: 2 },
@@ -361,11 +439,76 @@
         { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "40. Intravenous ( ) are recommended to slow a rapid ventricular response to AF in patients with ACS who do not display HF, hemodynamic instability, or bronchospasm.", options: ["calcium channel blockers", "ACE inhibitors", "alpha blockers", "beta blockers"], answer: 3 }
     ];
 
+    let activeQuizData = JSON.parse(JSON.stringify(originalQuizData));
     let currentQuestion = 0;
-    const userAnswers = new Array(quizData.length).fill(null);
-    const flaggedQuestions = new Array(quizData.length).fill(false);
+    let userAnswers = [];
+    let flaggedQuestions = [];
+    
+    // 서술형 모드 상태
+    let isEssayMode = false;
+
+    function resetQuizState() {
+        currentQuestion = 0;
+        userAnswers = new Array(activeQuizData.length).fill(null);
+        flaggedQuestions = new Array(activeQuizData.length).fill(false);
+    }
+
+    // 모드 전환 기능
+    function toggleMode() {
+        if (!confirm('모드를 변경하면 현재 작성 중인 모든 답안이 초기화되고 처음부터 시작합니다. 계속하시겠습니까?')) return;
+        
+        isEssayMode = !isEssayMode;
+        
+        const toggleBtn = document.getElementById('mode-toggle-btn');
+        const modeIndicator = document.getElementById('mode-indicator');
+        
+        if (isEssayMode) {
+            toggleBtn.innerText = '🔘 객관식 모드로 돌아가기';
+            modeIndicator.innerText = '[서술형(직접 입력) 모드]';
+            modeIndicator.style.color = '#dc3545';
+        } else {
+            toggleBtn.innerText = '📝 서술형 모드 켜기';
+            modeIndicator.innerText = '[객관식 모드]';
+            modeIndicator.style.color = '#0d6efd';
+        }
+
+        activeQuizData = JSON.parse(JSON.stringify(originalQuizData));
+        resetQuizState();
+        init();
+    }
+
+    function shuffleQuiz() {
+        if (!confirm('문항과 보기를 무작위로 섞고 처음부터 다시 시작하시겠습니까? (작성한 답안은 초기화됩니다)')) return;
+        
+        activeQuizData = JSON.parse(JSON.stringify(originalQuizData));
+
+        // 1. 문항 순서 섞기
+        for (let i = activeQuizData.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [activeQuizData[i], activeQuizData[j]] = [activeQuizData[j], activeQuizData[i]];
+        }
+        
+        // 2. 보기 순서 섞기
+        activeQuizData.forEach(q => {
+            const hasComboOption = q.options.some(opt => /^\d+(,\s*\d+)+$/.test(opt));
+            const isTrueFalse = q.options.length === 2 && q.options.includes("True");
+
+            if (!hasComboOption && !isTrueFalse) {
+                const correctAnswerText = q.options[q.answer];
+                for (let i = q.options.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+                }
+                q.answer = q.options.indexOf(correctAnswerText);
+            }
+        });
+        
+        resetQuizState();
+        init();
+    }
 
     function init() {
+        if(userAnswers.length !== activeQuizData.length) resetQuizState();
         renderNavGrid();
         renderQuestion(currentQuestion);
     }
@@ -373,11 +516,11 @@
     function renderNavGrid() {
         const grid = document.getElementById('nav-grid');
         grid.innerHTML = '';
-        for (let i = 0; i < quizData.length; i++) {
+        for (let i = 0; i < activeQuizData.length; i++) {
             const btn = document.createElement('div');
             btn.className = 'nav-btn';
             if (i === currentQuestion) btn.classList.add('active');
-            if (userAnswers[i] !== null) btn.classList.add('answered');
+            if (userAnswers[i] !== null && userAnswers[i] !== '') btn.classList.add('answered');
             if (flaggedQuestions[i]) btn.classList.add('flagged');
             btn.innerText = i + 1;
             btn.onclick = () => {
@@ -389,10 +532,12 @@
     }
 
     function renderQuestion(index) {
-        const q = quizData[index];
+        const q = activeQuizData[index];
         
         document.getElementById('q-number-display').innerText = `Question ${index + 1}`;
-        document.getElementById('q-status-display').innerText = userAnswers[index] !== null ? 'Complete' : 'Not yet answered';
+        const hasAnswered = userAnswers[index] !== null && userAnswers[index] !== '';
+        document.getElementById('q-status-display').innerText = hasAnswered ? 'Complete' : 'Not yet answered';
+        
         const flagBtn = document.getElementById('flag-btn-display');
         flagBtn.innerHTML = flaggedQuestions[index] ? '🚩 Remove flag' : '🚩 Flag question';
 
@@ -408,32 +553,52 @@
         const optionsContainer = document.getElementById('options-container');
         optionsContainer.innerHTML = '';
         
-        q.options.forEach((opt, i) => {
-            const div = document.createElement('div');
-            div.className = 'option';
+        if (isEssayMode) {
+            const textarea = document.createElement('textarea');
+            textarea.className = 'essay-input';
+            textarea.placeholder = '여기에 정답을 직접 입력하세요...';
+            textarea.value = userAnswers[index] || '';
             
-            const radio = document.createElement('input');
-            radio.type = 'radio';
-            radio.name = 'question_option';
-            radio.id = `opt_${i}`;
-            radio.checked = userAnswers[index] === i;
-            radio.onchange = () => selectOption(i);
+            textarea.oninput = (e) => {
+                const val = e.target.value;
+                userAnswers[currentQuestion] = val.trim() === '' ? null : val;
+                document.getElementById('q-status-display').innerText = userAnswers[currentQuestion] !== null ? 'Complete' : 'Not yet answered';
+                renderNavGrid();
+            };
+            optionsContainer.appendChild(textarea);
             
-            const label = document.createElement('label');
-            label.htmlFor = `opt_${i}`;
-            label.innerText = `${i + 1}. ${opt}`;
-            
-            div.appendChild(radio);
-            div.appendChild(label);
-            optionsContainer.appendChild(div);
-        });
+        } else {
+            q.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'question_option';
+                radio.id = `opt_${i}`;
+                radio.checked = userAnswers[index] === i;
+                radio.onchange = () => {
+                    userAnswers[currentQuestion] = i;
+                    document.getElementById('q-status-display').innerText = 'Complete';
+                    renderNavGrid();
+                };
+                
+                const label = document.createElement('label');
+                label.htmlFor = `opt_${i}`;
+                label.innerText = `${i + 1}. ${opt}`;
+                
+                div.appendChild(radio);
+                div.appendChild(label);
+                optionsContainer.appendChild(div);
+            });
+        }
 
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
         
         prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
         
-        if (index === quizData.length - 1) {
+        if (index === activeQuizData.length - 1) {
             nextBtn.innerText = 'Finish attempt ...';
             nextBtn.onclick = showResults;
         } else {
@@ -441,12 +606,6 @@
             nextBtn.onclick = () => changeQuestion(1);
         }
 
-        renderNavGrid();
-    }
-
-    function selectOption(optIndex) {
-        userAnswers[currentQuestion] = optIndex;
-        document.getElementById('q-status-display').innerText = 'Complete';
         renderNavGrid();
     }
 
@@ -465,6 +624,32 @@
         renderQuestion(currentQuestion);
     }
 
+    function retryIncorrect() {
+        const incorrectData = activeQuizData.filter((q, i) => {
+            if (isEssayMode) {
+                const uAns = (userAnswers[i] || '').toString().toLowerCase().replace(/\s+/g, '');
+                const cAns = q.options[q.answer].toLowerCase().replace(/\s+/g, '');
+                return uAns !== cAns; 
+            } else {
+                return userAnswers[i] !== q.answer;
+            }
+        });
+        
+        if(incorrectData.length === 0) {
+            alert('현재 틀린 문제가 없습니다. 완벽합니다!');
+            return;
+        }
+        
+        activeQuizData = incorrectData;
+        resetQuizState();
+        
+        document.getElementById('results-container').style.display = 'none';
+        document.getElementById('quiz-container').style.display = 'block';
+        document.querySelector('.sidebar').style.display = 'flex';
+        
+        init();
+    }
+
     function showResults() {
         if (!confirm('정말 답안을 제출하시겠습니까?')) return;
 
@@ -472,28 +657,53 @@
         document.querySelector('.sidebar').style.display = 'none';
         const resultsContainer = document.getElementById('results-container');
         resultsContainer.style.display = 'block';
+        
+        document.getElementById('essay-warning').style.display = isEssayMode ? 'block' : 'none';
 
         const list = document.getElementById('results-list');
         list.innerHTML = '';
 
-        quizData.forEach((q, i) => {
+        let correctCount = 0;
+
+        activeQuizData.forEach((q, i) => {
+            let isCorrect = false;
+            let userAnswerText = '응답 안 함';
+            const correctAnswerText = q.options[q.answer];
+
+            if (isEssayMode) {
+                const rawUserAns = userAnswers[i] || '';
+                userAnswerText = rawUserAns.trim() !== '' ? rawUserAns : '응답 안 함';
+                
+                const cleanU = rawUserAns.toLowerCase().replace(/\s+/g, '');
+                const cleanC = correctAnswerText.toLowerCase().replace(/\s+/g, '');
+                
+                isCorrect = (cleanU !== '') && (cleanU === cleanC);
+            } else {
+                isCorrect = userAnswers[i] === q.answer;
+                userAnswerText = userAnswers[i] !== null ? q.options[userAnswers[i]] : '응답 안 함';
+            }
+
+            if (isCorrect) correctCount++;
+            
             const item = document.createElement('div');
-            const isCorrect = userAnswers[i] === q.answer;
             item.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
 
             const statusText = isCorrect ? '<span class="status-badge status-correct">✔ 정답</span>' : '<span class="status-badge status-incorrect">✘ 오답</span>';
-            const userAnswerText = userAnswers[i] !== null ? q.options[userAnswers[i]] : '응답 안 함';
-            const correctAnswerText = q.options[q.answer];
 
             item.innerHTML = `
                 ${statusText}
                 <div style="color: #0d6efd; font-size: 14px; margin-bottom: 5px;">${q.guideline || ''}</div>
                 <div style="font-weight: bold; margin-bottom: 10px;">${q.text}</div>
-                <div style="margin-bottom: 5px; color: #6c757d;">나의 답: ${userAnswerText}</div>
-                ${!isCorrect ? `<div style="color: #198754; font-weight: bold;">정답: ${correctAnswerText}</div>` : ''}
+                <div style="margin-bottom: 5px; color: #6c757d;">나의 답: <span style="${isEssayMode ? 'font-weight:bold;' : ''}">${userAnswerText}</span></div>
+                ${!isCorrect || isEssayMode ? `<div style="color: #198754; font-weight: bold; margin-top: 10px;">${isEssayMode ? '모범 답안: ' : '정답: '}${correctAnswerText}</div>` : ''}
             `;
             list.appendChild(item);
         });
+
+        document.getElementById('score-display').innerText = `총 ${activeQuizData.length}문제 중 ${correctCount}문제 맞춤! (정답률: ${Math.round((correctCount/activeQuizData.length)*100)}%)`;
+        
+        const retryBtn = document.getElementById('retry-incorrect-btn');
+        retryBtn.style.display = correctCount === activeQuizData.length ? 'none' : 'inline-block';
     }
 
     init();
