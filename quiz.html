@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacotherapy Final Test</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        background-color: #f8f9fa;
+        color: #333;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* 좌측 사이드바 */
+    .sidebar {
+        width: 250px;
+        background-color: #f1f3f5;
+        border-right: 1px solid #dee2e6;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .sidebar-header {
+        padding: 15px;
+        background-color: #e9ecef;
+        font-weight: bold;
+        color: #0d6efd;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .nav-grid-container {
+        padding: 15px;
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 5px;
+    }
+    .nav-btn {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 3px;
+        padding: 8px 0;
+        text-align: center;
+        cursor: pointer;
+        font-size: 14px;
+        position: relative;
+    }
+    .nav-btn.answered {
+        background: linear-gradient(to bottom, #fff 50%, #adb5bd 50%);
+    }
+    .nav-btn.active {
+        border: 2px solid #000;
+        font-weight: bold;
+    }
+    .nav-btn.flagged::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        border-width: 0 10px 10px 0;
+        border-style: solid;
+        border-color: transparent red transparent transparent;
+    }
+    .sidebar-footer {
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+    .submit-link {
+        color: #0d6efd;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .submit-link:hover { text-decoration: underline; }
+
+    /* 메인 콘텐츠 영역 */
+    .main-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow-y: auto;
+    }
+    .breadcrumb {
+        padding: 15px 30px;
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    /* 퀴즈 UI */
+    #quiz-container {
+        padding: 30px;
+        max-width: 900px;
+    }
+    .question-layout {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    .info-box {
+        width: 130px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        font-size: 13px;
+        height: fit-content;
+    }
+    .info-box h3 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+    }
+    .flag-btn {
+        color: #212529;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        margin-top: 15px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .flag-btn:hover { text-decoration: underline; }
+    
+    .question-box {
+        flex-grow: 1;
+        background-color: #f1f8ff; /* 연한 파란색 배경 */
+        border: 1px solid #bce8f1;
+        padding: 20px;
+    }
+    .guideline-text {
+        font-weight: bold;
+        margin-bottom: 15px;
+        font-size: 15px;
+    }
+    .question-text {
+        font-size: 15px;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    .option {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+    }
+    .option input {
+        margin-right: 10px;
+        cursor: pointer;
+    }
+    .clear-choice {
+        display: inline-block;
+        margin-top: 15px;
+        color: #0d6efd;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .clear-choice:hover { text-decoration: underline; }
+
+    .nav-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .btn {
+        padding: 8px 16px;
+        border: 1px solid #ced4da;
+        background-color: #fff;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .btn-primary {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    .btn-primary:hover { background-color: #0b5ed7; }
+
+    /* 결과 화면 UI */
+    #results-container {
+        padding: 30px;
+        max-width: 900px;
+        display: none;
+    }
+    .result-item {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    .result-item.correct { border-left: 5px solid #198754; }
+    .result-item.incorrect { border-left: 5px solid #dc3545; }
+    .status-badge {
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+    .status-correct { color: #198754; }
+    .status-incorrect { color: #dc3545; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">Quiz navigation</div>
+    <div class="nav-grid-container">
+        <div class="nav-grid" id="nav-grid">
+            </div>
+    </div>
+    <div class="sidebar-footer">
+        <a class="submit-link" onclick="showResults()">Finish attempt ...</a>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="breadcrumb">
+        🏠 / 약물치료학2 / 2024년 약물치료학2 CV퀴즈
+    </div>
+    
+    <div id="quiz-container">
+        <div class="question-layout">
+            <div class="info-box">
+                <h3 id="q-number-display">Question 1</h3>
+                <div id="q-status-display" style="color: #6c757d; margin-bottom: 10px;">Not yet answered</div>
+                <div>Marked out of 1.00</div>
+                <button class="flag-btn" onclick="toggleFlag()" id="flag-btn-display">🚩 Flag question</button>
+            </div>
+            <div class="question-box">
+                <div class="guideline-text" id="guideline-display"></div>
+                <div class="question-text" id="q-text-display">Question text goes here</div>
+                <div id="options-container">
+                    </div>
+                <div class="clear-choice" onclick="clearChoice()">Clear my choice</div>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn" id="prev-btn" onclick="changeQuestion(-1)">Previous page</button>
+            <button class="btn btn-primary" id="next-btn" onclick="changeQuestion(1)">Next page</button>
+        </div>
+    </div>
+
+    <div id="results-container">
+        <h2>퀴즈 결과</h2>
+        <div id="results-list"></div>
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="location.reload()">다시 풀기</button>
+    </div>
+</div>
+
+<script>
+    // 사진을 바탕으로 정답이 완벽하게 맞춰진 40문제 데이터
+    const quizData = [
+        { guideline: "[2022년 고혈압 진료지침]", text: "1. 노인 환자의 수축기혈압은 mmHg 미만으로 조절할 것을 권고한다.", options: ["120", "130", "140", "150"], answer: 2 },
+        { guideline: "[2022년 고혈압 진료지침]", text: "2. 심혈관질환이 있는 고혈압환자에서 이차 예방을 위해 아스피린을 투여를 권고한다.", options: ["True", "False"], answer: 0 },
+        { guideline: "[2022년 고혈압 진료지침]", text: "3. 미세단백뇨나 단백뇨를 동반한 당뇨병 환자의 고혈압 치료약제로 ( )를 권고한다.", options: ["ACE 억제제", "베타차단제", "칼슘차단제", "티아지드계 이뇨제"], answer: 0 },
+        { guideline: "[2022년 고혈압 진료지침]", text: "4. 정맥 내 혈전용해 치료가 적합한 급성기 허혈성 뇌졸중 환자에서 혈압이 높은 경우 정맥 내 혈전용해 치료 시작 전에 혈압을 140/90 mmHg 이하로 낮출 것을 권고한다.", options: ["True", "False"], answer: 1 },
+        { guideline: "[2022년 고혈압 진료지침]", text: "5. 임신 중 사용할 수 있는 항고혈압약제가 아닌 것은?", options: ["Captopril", "Hydralazine", "Labetalol", "Methyldopa"], answer: 0 },
+        
+        { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "6. Adults with SIHD and hypertension should be treated with medications ( ) for compelling indications as first-line therapy.", options: ["GDMT calcium channel blockers, thiazide diuretics", "GDMT ACE inhibitors, ARBS", "GDMT beta blockers, thiazide diuretics", "GDMT beta blockers, ACE inhibitors"], answer: 3 },
+        { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "7. ( ) is NOT recommended in the treatment of hypertension in adults with HFrEF.", options: ["Nifedipine", "Amlodipine", "Clevidipine", "Verapamil"], answer: 3 },
+        { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "8. In adults with HFpEF who present with symptoms of volume overload, ( ) should be prescribed to control hypertension.", options: ["Diuretics", "Beta blockers", "Calcium channel blockers", "ACE inhibitors"], answer: 0 },
+        { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "9. In adults with hypertension and CKD, treatment with ( ) is reasonable to slow kidney disease progression.", options: ["ACE inhibitor", "Calcium channel blocker", "Diuretic", "Beta blocker"], answer: 0 },
+        { guideline: "[2017 ACC/AHA Guideline for HTN]", text: "10. For adults who experience a stroke or TIA, treatment with ( ) is useful", options: ["Thiazide diuretic, ACE inhibitor, or ARB", "Loop diuretic, ACE inhibitor, or ARB", "Calcium channel blocker, ACE inhibitor, or ARB", "Beta blocker, ACE inhibitor, or ARB"], answer: 0 },
+        
+        { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "11. ( ) remain first line therapy for lipid lowering inpatients with CCD.", options: ["Ezetimibe", "Statin", "Fenofibrate", "Alirocumab"], answer: 1 },
+        { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "12. In patients with CCD treated with PCI, dual antiplatelet therapy (DAPT) consisting of ( ) for 6 months post PCI followed by single antiplatelet therapy (SAPT) is indicated to reduce MACE and bleeding events.", options: ["aspirin and dipyridamole", "clopidogrel and prasugrel", "clopidogrel and ticagrelor", "aspirin and clopidogrel"], answer: 3 },
+        { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "13. In patients with CCD, an annual influenza vaccination is NOT recommended.", options: ["True", "False"], answer: 1 },
+        { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "14. In patients with CCD and angina, antianginal therapy with either a beta blocker, CCB, or long-acting nitrate is recommended for immediate short-term relief of angina or equivalent symptoms.", options: ["True", "False"], answer: 1 },
+        { guideline: "[2023 Chronic Coronary Disease: Guideline for Management]", text: "15. In patients with CCD, ( ) is recommended in patients who remain symptomatic despite treatment with beta blockers, CCB, or long-acting nitrate therapies.", options: ["Ivabradine", "Metoprolol", "Ranolazine", "Amlodipine"], answer: 2 },
+
+        { guideline: "[2022 이상지질혈증 치료지침]", text: "16. 스타틴 투약 전( )를 시행하고 투약 후( ) 수치가 3배 이상 상승되었을 때 투약 중단을 권고한다.", options: ["인지기능검사, MMSE", "갑상샘기능검사, 갑상샘호르몬", "심장기능검사, 트로포닌", "간기능검사, 간효소"], answer: 3 },
+        { guideline: "[2022 이상지질혈증 치료지침]", text: "17. LDL 콜레스테롤 목표에 도달하기 위하여 스타틴과 니코틴산의 병용투여를 추천한다.", options: ["True", "False"], answer: 1 },
+        { guideline: "[2022 이상지질혈증 치료지침]", text: "18. 최대 가용 용량의 스타틴을 투여해도 LDL 콜레스테롤이 목표 수치 미만으로 감소하지 않으면 ( )를 병용한다.", options: ["담즙산 결합수지", "에제티미브", "피브린산 유도체", "오메가-3 지방산"], answer: 1 },
+        { guideline: "[2022 이상지질혈증 치료지침]", text: "19. ( )이 있는 경우에는 기저 LDL 콜레스테롤 농도와 상관없이 바로 스타틴을 투약한다.", options: ["대동맥질환", "만성콩팥병", "심방세동", "급성심근경색"], answer: 3 },
+        { guideline: "[2022 이상지질혈증 치료지침]", text: "20. 중성지방이 지속적으로 500 mg/dL 이상인 경우, 중성지방 조절을 위한 약제로( )를 고려한다.", options: ["스타틴+에제티미브", "피브린산 유도체", "오메가-3 지방산", "1,2", "2,3", "1,3", "1,2,3"], answer: 4 },
+
+        { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "21. In patients with severe primary hypercholesterolemia (LDL-C level >190 mg/dL), without calculating 10-year ASCVD risk, begin ( ) therapy.", options: ["high intensity statin", "moderate-intensity statin", "statin with ezetimibe", "statin with PCSK9 inhibitor"], answer: 0 },
+        { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "22. In patients 40 to 75 years of age with DM and LDL-C > 70 mg/dL, start( ) therapy without calculating 10-year ASCVD risk.", options: ["high intensity statin", "moderate-intensity statin", "statin with ezetimibe", "statin with PCSK9 inhibitor"], answer: 1 },
+        { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "23. Select a 'Major ASCVD Event'.", options: ["Heterozygous familial hypercholesterolemia", "Diabetes mellitus", "History of congestive HF", "History of ischemic stroke"], answer: 3 },
+        
+        // 정답 수정됨: 24번 인덱스 0번(1. high-sensitivity C-reactive protein)으로 반영
+        { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "24. Which one is a risk-enhancing factor?", options: ["high-sensitivity C-reactive protein ≥ 2.0 mg/L", "ankle-brachial index <1.9", "lipoprotein (a) ≥ 150 mg/dL", "persistent elevations of triglycerides ≥ 150 mg/dL"], answer: 0 },
+        
+        { guideline: "[2018 AHA/ACC Guideline for Blood Cholesterol]", text: "25. Assess adherence and percentage response to LDL-C-lowering medications and lifestyle changes with repeat lipid measurement ( ) after statin initiation or dose adjustment.", options: ["1 to 2 weeks", "2 to 4 weeks", "4 to 12 weeks", "12 to 18 weeks"], answer: 2 },
+
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "26. 박출률 감소 심부전 환자에서 심혈관계 사망률과 심부전으로 인한 재입원을 감소시키므로, 표준치료로 사용해야 하는 약물계열은?", options: ["안지오텐신수용체-네프릴리신억제제(ARNI)", "베타차단제", "알도스테론 길항제", "1,2", "2,3", "1,3", "1,2,3"], answer: 6 },
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "27. 대규모 임상 연구를 통해 심부전 치료 효과가 검증된 베타차단제는?", options: ["비소프롤롤, 카르베디롤, 라베탈롤", "비소프롤롤, 카르베디롤, 메토프로롤 서방정", "프로프라놀롤, 비소프롤롤, 메토프로롤 서방정", "아테놀롤, 메토프로롤, 카르베디롤"], answer: 1 },
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "28. 당뇨병 동반유무와 관계없이 심부전으로 인한 입원 또는 심혈관계 사망을 감소시키기 위해 투여를 권고하는 나트륨-포도당 공동수송체2(SGLT2) 억제제는?", options: ["saxagliptin 또는 empagliflozin", "canagliflozin 또는 tirzepatide", "dapagliflozin 또는 semaglutide", "empagliflozin 또는 dapagliflozin"], answer: 3 },
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "29. 체액저류의 소견이 있는 심부전 환자에서 좌심실 수축기능 부전의 동반 여부와 관계없이 적정 체액량을 유지하기 위해 ( )를 사용해야 한다.", options: ["이뇨제", "베타차단제", "알도스테론 길항제", "SGLT2 억제제"], answer: 0 },
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "30. 좌심실 박출률이 35% 이하이고, 안정시 맥박수가 분당 70회 이상인 동율동의 심부전 환자에서, 베타차단제, ACE(또는 ARNI), 알도스테론 길항제)를 사용함에도 불구하고 심부전 증상이 지속될 경우 심부전으로 인한 입원 및 심혈관계 사망 위험을 줄이기 위해 사용할 수 있는 약물은?", options: ["verapamil", "ivabradine", "ranolazine", "amiodarone"], answer: 1 },
+        { guideline: "[2022 대한심부전학회 심부전 진료지침]", text: "31. 심방세동이 동반된 박출률 감소 심부전 환자에서 베타차단제를 사용해도 맥박조절이 잘 되지 않거나, 베타차단제 사용이 금기인 경우, 맥박 조절을 위해 디곡신 사용이 도움이 될 수 있다.", options: ["False", "True"], answer: 1 },
+
+        { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "32. The clinical strategy of inhibition of the renin-angiotensin system with ACE inhibitors OR ARBS OR ARNI in conjunction with evidence-based beta blockers, and ( ) in selected patients, is recommended for patients with chronic HFrEF to reduce morbidity and mortality.", options: ["alpha blockers", "loop diuretics", "calcium channel blockers", "aldosterone antagonists"], answer: 3 },
+        { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "33. In patients with type 2 diabetes and either established CVD or at high cardiovascular risk, ( ) should be used to prevent hospitalizations for HF.", options: ["ARNI", "beta blockers", "SGLT2i", "dihydropyridine calcium channel-blockers", "ACEI"], answer: 2 },
+        { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "34. In patients with HF who have fluid retention, ( ) are recommended to relieve congestion, improve symptoms, and prevent worsening HF.", options: ["ACEi", "diuretics", "SGLT2i", "beta blockers"], answer: 1 },
+        { guideline: "[2022 Guideline for the Management of Heart Failure]", text: "35. Which medications that may cause or exacerbate HF?", options: ["NSAIDS", "Saxagliptin", "Thiazolidinediones", "1,2", "2,3", "1,3", "1,2,3"], answer: 6 },
+
+        { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "36. Which medication is NOT recommended for selecting anticoagulant in patients with AF and an elevated CHA2DS2-VASc score of 2 or greater in men or 3 or greater in women?", options: ["Dabigatran", "Rivaroxaban", "Aspirin", "Apixaban"], answer: 2 },
+        { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "37. Among patients treated with warfarin, ( ) should be determined at least weekly during initiation of anticoagulant therapy and at least monthly when anticoagulation is stable.", options: ["Anti-factor Xa", "INR", "aPTT", "PT"], answer: 1 },
+        { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "38. ( ) and hepatic function should be evaluated before initiation of a DOAC and should be reevaluated at least annually.", options: ["Cognitive function", "Pulmonary function", "Renal function", "Gl function"], answer: 2 },
+        { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "39. ( ) is recommended for the reversal of dabigatran in the event of life-threatening bleeding or an urgent procedure.", options: ["Idarucizumab", "Ciraparantag", "Andexanet", "Vitamin K"], answer: 0 },
+        { guideline: "[2019 Guideline for the Management of Patients With Atrial Fibrillation]", text: "40. Intravenous ( ) are recommended to slow a rapid ventricular response to AF in patients with ACS who do not display HF, hemodynamic instability, or bronchospasm.", options: ["calcium channel blockers", "ACE inhibitors", "alpha blockers", "beta blockers"], answer: 3 }
+    ];
+
+    let currentQuestion = 0;
+    const userAnswers = new Array(quizData.length).fill(null);
+    const flaggedQuestions = new Array(quizData.length).fill(false);
+
+    function init() {
+        renderNavGrid();
+        renderQuestion(currentQuestion);
+    }
+
+    function renderNavGrid() {
+        const grid = document.getElementById('nav-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < quizData.length; i++) {
+            const btn = document.createElement('div');
+            btn.className = 'nav-btn';
+            if (i === currentQuestion) btn.classList.add('active');
+            if (userAnswers[i] !== null) btn.classList.add('answered');
+            if (flaggedQuestions[i]) btn.classList.add('flagged');
+            btn.innerText = i + 1;
+            btn.onclick = () => {
+                currentQuestion = i;
+                renderQuestion(currentQuestion);
+            };
+            grid.appendChild(btn);
+        }
+    }
+
+    function renderQuestion(index) {
+        const q = quizData[index];
+        
+        document.getElementById('q-number-display').innerText = `Question ${index + 1}`;
+        document.getElementById('q-status-display').innerText = userAnswers[index] !== null ? 'Complete' : 'Not yet answered';
+        const flagBtn = document.getElementById('flag-btn-display');
+        flagBtn.innerHTML = flaggedQuestions[index] ? '🚩 Remove flag' : '🚩 Flag question';
+
+        const guidelineDisplay = document.getElementById('guideline-display');
+        if (q.guideline) {
+            guidelineDisplay.innerText = q.guideline;
+            guidelineDisplay.style.display = 'block';
+        } else {
+            guidelineDisplay.style.display = 'none';
+        }
+
+        document.getElementById('q-text-display').innerText = q.text;
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        q.options.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'question_option';
+            radio.id = `opt_${i}`;
+            radio.checked = userAnswers[index] === i;
+            radio.onchange = () => selectOption(i);
+            
+            const label = document.createElement('label');
+            label.htmlFor = `opt_${i}`;
+            label.innerText = `${i + 1}. ${opt}`;
+            
+            div.appendChild(radio);
+            div.appendChild(label);
+            optionsContainer.appendChild(div);
+        });
+
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+        
+        if (index === quizData.length - 1) {
+            nextBtn.innerText = 'Finish attempt ...';
+            nextBtn.onclick = showResults;
+        } else {
+            nextBtn.innerText = 'Next page';
+            nextBtn.onclick = () => changeQuestion(1);
+        }
+
+        renderNavGrid();
+    }
+
+    function selectOption(optIndex) {
+        userAnswers[currentQuestion] = optIndex;
+        document.getElementById('q-status-display').innerText = 'Complete';
+        renderNavGrid();
+    }
+
+    function clearChoice() {
+        userAnswers[currentQuestion] = null;
+        renderQuestion(currentQuestion);
+    }
+
+    function changeQuestion(step) {
+        currentQuestion += step;
+        renderQuestion(currentQuestion);
+    }
+
+    function toggleFlag() {
+        flaggedQuestions[currentQuestion] = !flaggedQuestions[currentQuestion];
+        renderQuestion(currentQuestion);
+    }
+
+    function showResults() {
+        if (!confirm('정말 답안을 제출하시겠습니까?')) return;
+
+        document.getElementById('quiz-container').style.display = 'none';
+        document.querySelector('.sidebar').style.display = 'none';
+        const resultsContainer = document.getElementById('results-container');
+        resultsContainer.style.display = 'block';
+
+        const list = document.getElementById('results-list');
+        list.innerHTML = '';
+
+        quizData.forEach((q, i) => {
+            const item = document.createElement('div');
+            const isCorrect = userAnswers[i] === q.answer;
+            item.className = `result-item ${isCorrect ? 'correct' : 'incorrect'}`;
+
+            const statusText = isCorrect ? '<span class="status-badge status-correct">✔ 정답</span>' : '<span class="status-badge status-incorrect">✘ 오답</span>';
+            const userAnswerText = userAnswers[i] !== null ? q.options[userAnswers[i]] : '응답 안 함';
+            const correctAnswerText = q.options[q.answer];
+
+            item.innerHTML = `
+                ${statusText}
+                <div style="color: #0d6efd; font-size: 14px; margin-bottom: 5px;">${q.guideline || ''}</div>
+                <div style="font-weight: bold; margin-bottom: 10px;">${q.text}</div>
+                <div style="margin-bottom: 5px; color: #6c757d;">나의 답: ${userAnswerText}</div>
+                ${!isCorrect ? `<div style="color: #198754; font-weight: bold;">정답: ${correctAnswerText}</div>` : ''}
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
