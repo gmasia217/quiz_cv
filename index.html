@@ -208,6 +208,55 @@
     }
     .status-correct { color: #198754; }
     .status-incorrect { color: #dc3545; }
+
+    /* --- 여기서부터 모바일 반응형 UI 코드 --- */
+    @media (max-width: 768px) {
+        body {
+            flex-direction: column; /* 화면을 좌우가 아닌 위아래로 배치 */
+            overflow: auto; /* 모바일에서는 전체 스크롤 허용 */
+            height: auto;
+        }
+        .sidebar {
+            width: 100%; /* 사이드바를 가로 꽉 차게 */
+            height: auto;
+            order: 2; /* 사이드바(문항 네비게이션)를 화면 맨 아래로 이동 */
+            border-right: none;
+            border-top: 2px solid #dee2e6;
+        }
+        .main-content {
+            order: 1; /* 문제 영역을 화면 맨 위로 배치 */
+            overflow-y: visible;
+        }
+        #quiz-container {
+            padding: 15px; /* 모바일에서는 양옆 여백 축소 */
+        }
+        .question-layout {
+            flex-direction: column; /* 정보 박스와 문제 박스를 좌우가 아닌 위아래로 스택 */
+            gap: 10px;
+        }
+        .info-box {
+            width: auto; /* 너비 제한 해제 */
+            display: flex; /* 요소들을 가로로 나열 */
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+        }
+        .info-box h3 {
+            margin: 0;
+        }
+        #q-status-display {
+            margin-bottom: 0 !important;
+        }
+        .flag-btn {
+            margin-top: 0;
+        }
+        .breadcrumb {
+            padding: 10px 15px;
+            font-size: 12px;
+        }
+    }
+
 </style>
 </head>
 <body>
